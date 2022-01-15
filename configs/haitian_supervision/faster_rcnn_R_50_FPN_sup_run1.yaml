@@ -1,0 +1,51 @@
+_BASE_: "../Base-RCNN-FPN.yaml"
+MODEL:
+  META_ARCHITECTURE: "TwoStagePseudoLabGeneralizedRCNN"
+  WEIGHTS: "weights/R-50.pkl"
+#  WEIGHTS: "output/model_0179999.pth"
+  MASK_ON: False
+  RESNETS:
+    DEPTH: 50
+#    STRIDE_IN_1X1: False
+  PROPOSAL_GENERATOR:
+    NAME: "PseudoLabRPN"
+  RPN:
+    POSITIVE_FRACTION: 0.25
+    LOSS: "CrossEntropy"
+  ROI_HEADS:
+    NAME: "StandardROIHeadsPseudoLab"
+    LOSS: "FocalLoss"
+    NUM_CLASSES: 6
+SOLVER:
+  LR_SCHEDULER_NAME: "WarmupMultiStepLR"
+  STEPS: (175999, 179999)
+  MAX_ITER: 40000
+  IMG_PER_BATCH_LABEL: 32
+  IMG_PER_BATCH_UNLABEL: 32
+  BASE_LR: 0.01
+DATALOADER:
+  SUP_PERCENT: 100.0
+  RANDOM_DATA_SEED: 1
+  NUM_WORKERS: 2
+DATASETS:
+  CROSS_DATASET: True
+#  TRAIN: ("train",)
+  TRAIN_LABEL: ("haitain_train",)
+  TRAIN_UNLABEL: ("haitain_unlabel",)
+  TEST: ("haitain_val",)
+#  TEST: ("haitain_test",)
+SEMISUPNET:
+  Trainer: "ubteacher"
+  BBOX_THRESHOLD: 0.7
+  TEACHER_UPDATE_ITER: 1
+  BURN_UP_STEP: 2000
+  EMA_KEEP_RATE: 0.9996
+  UNSUP_LOSS_WEIGHT: 4.0  #longhui
+
+  PARA_MU: 0.1  #longhui
+  PARA_T: 0.7  #longhui
+TEST:
+  PRECISE_BN:
+    ENABLED: True
+  EVAL_PERIOD: 2000
+  EVALUATOR: "COCOeval"
